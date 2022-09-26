@@ -1,6 +1,7 @@
+import time
+
 import board
 import usb_hid
-import time
 from adafruit_debouncer import Debouncer, ticks_diff, ticks_ms
 from adafruit_hid.keyboard import Keyboard as adaKB
 from adafruit_hid.keycode import Keycode
@@ -41,9 +42,9 @@ class Button(object):
         self.state_changed = False
 
         self.press_time = press_time
-        self.press_timer = 0
+        self.press_timer = 0.0
         self.release_time = release_time
-        self.release_timer = 0
+        self.release_timer = 0.0
 
         # Set Pin to Input
         self.btn = DigitalInOut(pin)
@@ -81,6 +82,7 @@ class Button(object):
                 self.transition_to(KeyState.PRESSED)
             elif self.off:
                 self.transition_to(KeyState.RELEASE)
+                self.release_timer = time.monotonic()
         elif self.kstate == KeyState.PRESSED:
             self.transition_to(KeyState.HOLD)
         elif self.kstate == KeyState.HOLD:
@@ -94,10 +96,11 @@ class Button(object):
                 self.transition_to(KeyState.RELEASED)
             elif self.on:
                 self.transition_to(KeyState.PRESS)
+                self.press_timer = time.monotonic()
         elif self.kstate == KeyState.RELEASED:
             self.transition_to(KeyState.IDLE)
 
-    def transition_to(self, next_state: KeyState) -> None:
+    def transition_to(self, next_state: int) -> None:
         self.kstate = next_state
         self.state_changed = True
 
